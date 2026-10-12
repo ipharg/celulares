@@ -30,7 +30,10 @@
   button,.btn{background:linear-gradient(180deg,var(--blue),var(--blue2));color:#fff;border:0;border-radius:12px;padding:0 20px;font-weight:800;font-size:1rem;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;justify-content:center}
   button:active,.btn:active{transform:scale(.97)}
   .btn-scan{width:100%;margin-top:12px;padding:14px;background:transparent;border:1.5px solid var(--blue);color:var(--blue);gap:8px}
-  .btn-call{width:100%;margin-top:14px;padding:15px;background:linear-gradient(180deg,#ff6474,var(--red));font-size:1.1rem;gap:8px}
+  .calls{display:flex;gap:10px;margin-top:14px;flex-wrap:wrap}
+  .btn-call,.btn-wa{flex:1 1 180px;padding:15px 12px;font-size:1rem;gap:8px;text-align:center;line-height:1.2}
+  .btn-call{background:linear-gradient(180deg,#ff6474,var(--red))}
+  .btn-wa{background:linear-gradient(180deg,#34d98a,#1fae66)}
   .hint{color:var(--muted);font-size:.85rem;margin-top:10px;line-height:1.4}
   .result{display:none;margin-top:18px;padding:16px;border-radius:12px;border:1.5px solid;font-weight:600;line-height:1.4}
   .result.show{display:block}
@@ -110,35 +113,55 @@
 
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script>
-  // ===== LISTA DE IMEI ROBADOS =====
+  /* =====================================================================
+     LISTA DE CELULARES ROBADOS
+     Cada celular es UNA línea con estos datos:
+       m = modelo                      (ej: "iPhone 15 Pro")
+       d = capacidad y color           (ej: "256 GB · Negro")
+       i = IMEI, 15 dígitos            (sin espacios ni guiones)
+       w = WhatsApp de quien reportó   (ej: "3704774981", sin 0 ni 15 ni +54)
+
+     Cada celular puede tener SU PROPIO número de WhatsApp en "w".
+     Si dejás w:"" (vacío), no aparece el botón verde para ese celular.
+     ===================================================================== */
   const ROBADOS = [
-    // Lista 1 de 2
-    {m:"iPhone 11",        d:"128 GB · Negro",                i:"359466822865176"},
-    {m:"iPhone 12 Pro Max",d:"128 GB · Plata",                i:"353730399797997"},
-    {m:"iPhone 13",        d:"128 GB · Blanco estrella",      i:"354066780793405"},
-    {m:"iPhone 13",        d:"128 GB · Blanco estrella",      i:"357514597679793"},
-    {m:"iPhone 13 Pro",    d:"256 GB · Grafito",              i:"359052379699356"},
-    {m:"iPhone 14",        d:"128 GB · Blanco estrella",      i:"350431275917634"},
-    {m:"iPhone 14 Pro Max",d:"128 GB · Plata",                i:"353427814401590"},
-    {m:"iPhone 14 Pro Max",d:"128 GB · Morado profundo",      i:"355822265602381"},
-    {m:"iPhone 15",        d:"128 GB · Azul",                 i:"350795426916335"},
-    {m:"iPhone 15",        d:"128 GB · Negro",                i:"351840763573494"},
-    {m:"iPhone 15",        d:"128 GB · Rosa",                 i:"358614724146978"},
-    // Lista 2 de 2
-    {m:"iPhone 15 Pro",    d:"128 GB · Titanio azul",         i:"351697432168662"},
-    {m:"iPhone 16 Pro",    d:"128 GB · Titanio del desierto", i:"356727497453488"},
-    {m:"iPhone 16 Pro",    d:"128 GB · Titanio natural",      i:"357324795488652"},
-    {m:"iPhone 16 Pro Max",d:"256 GB · Titanio natural",      i:"352864971500981"},
-    {m:"iPhone 17",        d:"256 GB · Negro",                i:"352579436682642"},
-    {m:"iPhone 17 Pro",    d:"256 GB · Plata",                i:"357165908105042"},
-    {m:"iPhone 17 Pro Max",d:"256 GB · Plata",                i:"351586498796229"},
-    {m:"iPhone 17 Pro Max",d:"256 GB · Azul",                 i:"355101476692501"},
-    {m:"iPhone 18 Pro",    d:"256 GB · Negro",                i:"355727395219453"},
-    {m: "Samsung A07",    d:"218 GB · Negro",                i:"357113743579344"},
-    {m:"OUKITEL C72",    d:"128 GB · Dorado",                i:"358187250214015"},
-    {m:"iPhone 16",    d:"128 GB · Blanco",                i:"353170212946887"},
-    {m:"iPhone 17 Pro",    d:"256 GB · Silver",                i:"357254475098796"},
-    {m:"iPhone 18 Pro Max",d:"256 GB · Glaciar",              i:"353610356593276"}
+
+    // ---------- CELULARES YA CARGADOS (reportados al 3704774981) ----------
+    {m:"iPhone 11",        d:"128 GB · Negro",                i:"359466822865176", w:"3704774981"},
+    {m:"iPhone 12 Pro Max",d:"128 GB · Plata",                i:"353730399797997", w:"3704774981"},
+    {m:"iPhone 13",        d:"128 GB · Blanco estrella",      i:"354066780793405", w:"3704774981"},
+    {m:"iPhone 13",        d:"128 GB · Blanco estrella",      i:"357514597679793", w:"3704774981"},
+    {m:"iPhone 13 Pro",    d:"256 GB · Grafito",              i:"359052379699356", w:"3704774981"},
+    {m:"iPhone 14",        d:"128 GB · Blanco estrella",      i:"350431275917634", w:"3704774981"},
+    {m:"iPhone 14 Pro Max",d:"128 GB · Plata",                i:"353427814401590", w:"3704774981"},
+    {m:"iPhone 14 Pro Max",d:"128 GB · Morado profundo",      i:"355822265602381", w:"3704774981"},
+    {m:"iPhone 15",        d:"128 GB · Azul",                 i:"350795426916335", w:"3704774981"},
+    {m:"iPhone 15",        d:"128 GB · Negro",                i:"351840763573494", w:"3704774981"},
+    {m:"iPhone 15",        d:"128 GB · Rosa",                 i:"358614724146978", w:"3704774981"},
+    {m:"iPhone 15 Pro",    d:"128 GB · Titanio azul",         i:"351697432168662", w:"3704774981"},
+    {m:"iPhone 16 Pro",    d:"128 GB · Titanio del desierto", i:"356727497453488", w:"3704774981"},
+    {m:"iPhone 16 Pro",    d:"128 GB · Titanio natural",      i:"357324795488652", w:"3704774981"},
+    {m:"iPhone 16 Pro Max",d:"256 GB · Titanio natural",      i:"352864971500981", w:"3704774981"},
+    {m:"iPhone 17",        d:"256 GB · Negro",                i:"352579436682642", w:"3704774981"},
+    {m:"iPhone 17 Pro",    d:"256 GB · Plata",                i:"357165908105042", w:"3704774981"},
+    {m:"iPhone 17 Pro Max",d:"256 GB · Plata",                i:"351586498796229", w:"3704774981"},
+    {m:"iPhone 17 Pro Max",d:"256 GB · Azul",                 i:"355101476692501", w:"3704774981"},
+    {m:"iPhone 18 Pro",    d:"256 GB · Negro",                i:"355727395219453", w:"3704774981"},
+    {m:"iPhone 18 Pro Max",d:"256 GB · Glaciar",              i:"353610356593276", w:"3704774981"},
+
+    // =====================================================================
+    //  ✏️  AGREGAR CELULARES NUEVOS ACÁ (debajo de esta línea)
+    //  1) Copiá la línea de ejemplo de abajo (sin las dos barras //)
+    //  2) Pegala debajo de este recuadro
+    //  3) Cambiá modelo, capacidad/color, IMEI y el WhatsApp de quien reportó
+    //  Ejemplo:
+    //  {m:"iPhone 14 Pro", d:"256 GB · Negro espacial", i:"350000000000000", w:"3704000000"},
+    // =====================================================================
+
+
+    // =====================================================================
+    //  ⬆️  NO ESCRIBAS DESPUÉS DE ESTA LÍNEA
+    // =====================================================================
   ];
 
   const $list = document.getElementById('list');
@@ -157,6 +180,16 @@
        </div>`).join('');
   }
   renderList();
+
+  // Arma el número para WhatsApp (Argentina): deja solo dígitos y agrega 549 si falta
+  function waNumber(n){
+    let d = String(n || '').replace(/\D/g,'');
+    if(!d) return '';
+    if(d.startsWith('00')) d = d.slice(2);
+    if(d.startsWith('54')) return d.startsWith('549') ? d : '549' + d.slice(2);
+    if(d.startsWith('0')) d = d.slice(1);
+    return '549' + d;
+  }
 
   function show(type, title, text){
     $result.className = "result show " + type;
@@ -183,7 +216,14 @@
     if(hit){
       show('bad','⚠ Este IMEI SÍ se encuentra en la lista de robados',
         `${hit.m} · ${hit.d}. No lo compres.`);
-      $call.innerHTML = '<a class="btn btn-call" href="tel:911">📞 Comunicarse al 911</a>';
+      let html = '<div class="calls"><a class="btn btn-call" href="tel:911">📞 Comunicarse al 911</a>';
+      const wa = waNumber(hit.w);
+      if(wa){
+        const msg = encodeURIComponent(`Hola, consulté el IMEI ${hit.i} (${hit.m} · ${hit.d}) en el Registro de Celulares Robados en Formosa y figura como robado. Me comunico para dar información.`);
+        html += `<a class="btn btn-wa" href="https://wa.me/${wa}?text=${msg}" target="_blank" rel="noopener">💬 Comunicarse con quien reportó el celular</a>`;
+      }
+      html += '</div>';
+      $call.innerHTML = html;
       renderList(hit.i);
       const el = $list.querySelector('.hit');
       if(el) el.scrollIntoView({behavior:'smooth',block:'center'});
